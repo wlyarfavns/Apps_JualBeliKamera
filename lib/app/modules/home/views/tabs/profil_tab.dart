@@ -444,6 +444,14 @@ class ProfilTab extends StatelessWidget {
                               ),
                             ],
                           ),
+                          const SizedBox(height: 12),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text('Status Pesanan', style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 13, color: Colors.white70)),
+                              _buildStatusBadge(order['status']?.toString() ?? 'pending'),
+                            ],
+                          ),
                         ],
                       ),
                     );
@@ -455,6 +463,52 @@ class ProfilTab extends StatelessWidget {
         ),
       ),
       isScrollControlled: true,
+    );
+  }
+
+  Widget _buildStatusBadge(String status) {
+    Color color;
+    String label;
+    
+    switch (status) {
+      case 'SUCCES':
+        color = const Color(0xFF4CD964);
+        label = 'Di-ACC / Sukses';
+        break;
+      case 'processing':
+        color = Colors.blue;
+        label = 'Sedang Diproses';
+        break;
+      case 'shipped':
+        color = Colors.orange;
+        label = 'Sedang Dikirim';
+        break;
+      case 'completed':
+        color = Colors.green;
+        label = 'Selesai';
+        break;
+      case 'cancelled':
+        color = Colors.red;
+        label = 'Dibatalkan';
+        break;
+      case 'pending':
+      default:
+        color = Colors.grey;
+        label = 'Menunggu ACC';
+        break;
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.2),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: color.withOpacity(0.5)),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(color: color, fontSize: 11, fontWeight: FontWeight.bold),
+      ),
     );
   }
 

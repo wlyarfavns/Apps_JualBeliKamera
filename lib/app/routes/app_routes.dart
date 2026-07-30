@@ -8,4 +8,5 @@ abstract class Routes {
   static const SEARCH = '/search';
   static const PROFILE = '/profile';
   static const SPLASH = '/splash';
+  static const ADMIN_DASHBOARD = '/admin_dashboard';
 }

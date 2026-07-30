@@ -14,7 +14,7 @@ class AuthController extends GetxController {
   // User info
   var name = 'Tamu (Guest)'.obs;
   var email = ''.obs;
-  var profilePhoto = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80'.obs;
+  var profilePhoto = 'https://ui-avatars.com/api/?name=Tamu&background=1c1c1e&color=fff&size=150'.obs;
   var role = 'Pengunjung'.obs;
   var statsOrders = 0.obs;
   var statsWishlist = 0.obs;
@@ -30,7 +30,26 @@ class AuthController extends GetxController {
         isLoggedIn.value = true;
         email.value = session.user.email ?? '';
         name.value = session.user.userMetadata?['full_name'] ?? 'Pengguna Pro-Lens';
-        role.value = 'Pro Photographer';
+        
+        final avatarUrl = session.user.userMetadata?['avatar_url'];
+        if (avatarUrl != null && avatarUrl.toString().isNotEmpty) {
+          profilePhoto.value = avatarUrl.toString();
+        } else {
+          final encodedName = Uri.encodeComponent(name.value);
+          profilePhoto.value = 'https://ui-avatars.com/api/?name=$encodedName&background=random&color=fff&size=150';
+        }
+        
+        // Ambil role dari profil
+        supabase.from('profiles').select('role').eq('id', session.user.id).maybeSingle().then((profile) {
+          if (profile != null && profile['role'] != null) {
+            role.value = profile['role'];
+          } else {
+            role.value = 'user';
+          }
+        }).catchError((e) {
+          print("Error fetching role: $e");
+          role.value = 'user';
+        });
         
         // Tarik riwayat pesanan
         try {
@@ -44,6 +63,7 @@ class AuthController extends GetxController {
         name.value = 'Tamu (Guest)';
         email.value = '';
         role.value = 'Pengunjung';
+        profilePhoto.value = 'https://ui-avatars.com/api/?name=Tamu&background=1c1c1e&color=fff&size=150';
       }
     });
   }
@@ -79,7 +99,20 @@ class AuthController extends GetxController {
         Get.find<NotificationController>().addNotification('Registrasi Berhasil', 'Selamat datang di Pro-Lens Digital, $fullName!');
       } catch(e) {}
 
-      Get.offAllNamed('/home');
+      String userRole = 'user';
+      if (res.user != null) {
+        final profile = await supabase.from('profiles').select('role').eq('id', res.user!.id).maybeSingle();
+        if (profile != null && profile['role'] != null) {
+          userRole = profile['role'];
+        }
+      }
+
+      if (userRole == 'admin') {
+        Get.offAllNamed('/admin_dashboard');
+      } else {
+        Get.offAllNamed('/home');
+      }
+
       Get.snackbar(
         'Registrasi Berhasil',
         'Akun profesional Anda berhasil dibuat!',
@@ -140,7 +173,20 @@ class AuthController extends GetxController {
         Get.find<NotificationController>().addNotification('Login Berhasil', 'Selamat datang kembali, jangan lewatkan promo alat fotografi hari ini!');
       } catch(e) {}
 
-      Get.offAllNamed('/home');
+      String userRole = 'user';
+      if (res.user != null) {
+        final profile = await supabase.from('profiles').select('role').eq('id', res.user!.id).maybeSingle();
+        if (profile != null && profile['role'] != null) {
+          userRole = profile['role'];
+        }
+      }
+
+      if (userRole == 'admin') {
+        Get.offAllNamed('/admin_dashboard');
+      } else {
+        Get.offAllNamed('/home');
+      }
+
       Get.snackbar(
         'Berhasil Masuk',
         'Selamat datang kembali di Pro-Lens Digital!',
@@ -254,7 +300,19 @@ class AuthController extends GetxController {
           Get.find<NotificationController>().addNotification('Google Login Berhasil', 'Selamat datang ${name.value} di Pro-Lens Digital!');
         } catch(e) {}
 
-        Get.offAllNamed('/home');
+        String userRole = 'user';
+        final profile = await supabase.from('profiles').select('role').eq('id', user.id).maybeSingle();
+        if (profile != null && profile['role'] != null) {
+          userRole = profile['role'];
+        }
+        role.value = userRole;
+
+        if (userRole == 'admin') {
+          Get.offAllNamed('/admin_dashboard');
+        } else {
+          Get.offAllNamed('/home');
+        }
+
         
         Get.snackbar(
           'Login Berhasil',

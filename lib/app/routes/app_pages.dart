@@ -10,7 +10,8 @@ import '../modules/home/controllers/home_controller.dart';
 import '../modules/cart/controllers/cart_controller.dart';
 import '../modules/checkout/controllers/checkout_controller.dart';
 import '../modules/splash/views/splash_view.dart';
-
+import '../modules/admin/views/admin_dashboard_view.dart';
+import '../modules/admin/controllers/admin_dashboard_controller.dart';
 class AppPages {
   static const INITIAL = Routes.SPLASH;
 
@@ -60,6 +61,14 @@ class AppPages {
         Get.lazyPut<CheckoutController>(() => CheckoutController());
       }),
       transition: Transition.rightToLeft,
+    ),
+    GetPage(
+      name: Routes.ADMIN_DASHBOARD,
+      page: () => const AdminDashboardView(),
+      binding: BindingsBuilder(() {
+        Get.lazyPut<AdminDashboardController>(() => AdminDashboardController());
+      }),
+      transition: Transition.fadeIn,
     ),
   ];
 }

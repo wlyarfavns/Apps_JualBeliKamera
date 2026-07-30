@@ -179,12 +179,62 @@ class CartController extends GetxController {
     cartItems.clear();
   }
 
+  RealtimeChannel? _orderSubscription;
+
+  void setupOrderSubscription() {
+    final supabase = Supabase.instance.client;
+    final user = supabase.auth.currentUser;
+    if (user == null) return;
+
+    _orderSubscription?.unsubscribe();
+    
+    _orderSubscription = supabase.channel('public:orders')
+      .onPostgresChanges(
+        event: PostgresChangeEvent.update,
+        schema: 'public',
+        table: 'orders',
+        filter: PostgresChangeFilter(
+          type: PostgresChangeFilterType.eq,
+          column: 'user_id',
+          value: user.id,
+        ),
+        callback: (payload) {
+          fetchMyOrders(skipSubscription: true);
+          
+          final newStatus = payload.newRecord['status'];
+          if (newStatus != null) {
+            String statusText = newStatus;
+            if (newStatus == 'SUCCES') statusText = 'Di-ACC / Sukses';
+            if (newStatus == 'processing') statusText = 'Sedang Diproses';
+            if (newStatus == 'shipped') statusText = 'Sedang Dikirim';
+            if (newStatus == 'completed') statusText = 'Selesai';
+            if (newStatus == 'cancelled') statusText = 'Dibatalkan';
+
+            Get.snackbar('Update Pesanan', 'Status pesanan Anda diperbarui menjadi: $statusText',
+              backgroundColor: const Color(0xFFFF3B30), colorText: Colors.white);
+
+            try {
+              Get.find<NotificationController>().addNotification(
+                'Status Pesanan Diperbarui', 
+                'Pesanan Anda sekarang berstatus: $statusText'
+              );
+            } catch (e) {}
+          }
+        }
+      )
+      .subscribe();
+  }
+
   // Menarik riwayat pesanan dari Supabase
-  Future<void> fetchMyOrders() async {
+  Future<void> fetchMyOrders({bool skipSubscription = false}) async {
     try {
       final supabase = Supabase.instance.client;
       final user = supabase.auth.currentUser;
       if (user == null) return;
+      
+      if (!skipSubscription) {
+        setupOrderSubscription();
+      }
 
       // Mengambil orders dan order_items yang terhubung
       final response = await supabase
