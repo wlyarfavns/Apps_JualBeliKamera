@@ -253,6 +253,21 @@ class CheckoutController extends GetxController {
 
       if (itemsToInsert.isNotEmpty) {
         await supabase.from('order_items').insert(itemsToInsert);
+        
+        // Mengurangi stok produk di database
+        for (var item in cartController.cartItems.where((i) => i.isSelected.value)) {
+          try {
+            final productData = await supabase.from('products').select('stock').eq('id', item.product.id).maybeSingle();
+            if (productData != null && productData['stock'] != null) {
+              final currentStock = productData['stock'] as int;
+              final newStock = currentStock - item.quantity.value;
+              // Set stok minimal 0 agar tidak minus
+              await supabase.from('products').update({'stock': newStock < 0 ? 0 : newStock}).eq('id', item.product.id);
+            }
+          } catch (e) {
+            print('Gagal update stock: $e');
+          }
+        }
       }
 
       // Memuat ulang riwayat pesanan dari database ke dalam memori aplikasi

@@ -116,27 +116,40 @@ class AdminDashboardView extends GetView<AdminDashboardController> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.end,
                       children: [
-                        const Text('Ubah Status: ', style: TextStyle(color: Colors.white54)),
-                        const SizedBox(width: 8),
-                        DropdownButton<String>(
-                          dropdownColor: const Color(0xFF2C2C2E),
-                          value: status,
-                          style: const TextStyle(color: Colors.white),
-                          underline: Container(height: 1, color: Colors.white24),
-                          items: const [
-                            DropdownMenuItem(value: 'pending', child: Text('Pending')),
-                            DropdownMenuItem(value: 'SUCCES', child: Text('Di-ACC / Sukses')),
-                            DropdownMenuItem(value: 'processing', child: Text('Diproses')),
-                            DropdownMenuItem(value: 'shipped', child: Text('Dikirim')),
-                            DropdownMenuItem(value: 'completed', child: Text('Selesai')),
-                            DropdownMenuItem(value: 'cancelled', child: Text('Dibatalkan')),
-                          ],
-                          onChanged: (String? newValue) {
-                            if (newValue != null && newValue != status) {
-                              controller.updateOrderStatus(order['id'], newValue, status);
-                            }
-                          },
-                        ),
+                        if (status == 'pending')
+                          ElevatedButton(
+                            onPressed: () {
+                              // Mengubah status menjadi processing saat di-ACC
+                              controller.updateOrderStatus(order['id'], 'processing', status);
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFFFF3B30),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                            ),
+                            child: const Text('ACC Pesanan', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                          )
+                        else ...[
+                          const Text('Ubah Status: ', style: TextStyle(color: Colors.white54)),
+                          const SizedBox(width: 8),
+                          DropdownButton<String>(
+                            dropdownColor: const Color(0xFF2C2C2E),
+                            value: ['SUCCES', 'processing', 'shipped', 'completed', 'cancelled'].contains(status) ? status : 'processing',
+                            style: const TextStyle(color: Colors.white),
+                            underline: Container(height: 1, color: Colors.white24),
+                            items: const [
+                              DropdownMenuItem(value: 'processing', child: Text('Diproses')),
+                              DropdownMenuItem(value: 'shipped', child: Text('Dikirim')),
+                              DropdownMenuItem(value: 'SUCCES', child: Text('Sukses')),
+                              DropdownMenuItem(value: 'completed', child: Text('Selesai')),
+                              DropdownMenuItem(value: 'cancelled', child: Text('Dibatalkan')),
+                            ],
+                            onChanged: (String? newValue) {
+                              if (newValue != null && newValue != status) {
+                                controller.updateOrderStatus(order['id'], newValue, status);
+                              }
+                            },
+                          ),
+                        ],
                       ],
                     )
                   ],
