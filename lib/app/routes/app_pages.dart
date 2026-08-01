@@ -12,6 +12,8 @@ import '../modules/checkout/controllers/checkout_controller.dart';
 import '../modules/splash/views/splash_view.dart';
 import '../modules/admin/views/admin_dashboard_view.dart';
 import '../modules/admin/controllers/admin_dashboard_controller.dart';
+import '../modules/admin/views/admin_product_form_view.dart';
+import '../modules/admin/controllers/admin_product_form_controller.dart';
 class AppPages {
   static const INITIAL = Routes.SPLASH;
 
@@ -69,6 +71,14 @@ class AppPages {
         Get.lazyPut<AdminDashboardController>(() => AdminDashboardController());
       }),
       transition: Transition.fadeIn,
+    ),
+    GetPage(
+      name: Routes.ADMIN_PRODUCT_FORM,
+      page: () => const AdminProductFormView(),
+      binding: BindingsBuilder(() {
+        Get.lazyPut<AdminProductFormController>(() => AdminProductFormController());
+      }),
+      transition: Transition.rightToLeft,
     ),
   ];
 }

@@ -9,4 +9,5 @@ abstract class Routes {
   static const PROFILE = '/profile';
   static const SPLASH = '/splash';
   static const ADMIN_DASHBOARD = '/admin_dashboard';
+  static const ADMIN_PRODUCT_FORM = '/admin_product_form';
 }

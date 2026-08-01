@@ -46,15 +46,15 @@ class HomeController extends GetxController {
         allProducts.assignAll(loadedProducts);
         filteredProducts.assignAll(loadedProducts);
       } else {
-        // Fallback to DummyData if database is empty (optional)
-        allProducts.assignAll(DummyData.products);
-        filteredProducts.assignAll(DummyData.products);
+        // Kosongkan list jika database benar-benar kosong
+        allProducts.clear();
+        filteredProducts.clear();
       }
     } catch (e) {
       print("Error fetching products: $e");
-      // Fallback to DummyData if there's an error
-      allProducts.assignAll(DummyData.products);
-      filteredProducts.assignAll(DummyData.products);
+      // Kosongkan list jika terjadi error (jangan pakai dummy data agar tidak error Foreign Key saat checkout)
+      allProducts.clear();
+      filteredProducts.clear();
     } finally {
       isLoading.value = false;
       applyFilters();

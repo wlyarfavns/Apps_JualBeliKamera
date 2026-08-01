@@ -11,12 +11,16 @@ class AdminDashboardController extends GetxController {
 
   var orders = <Map<String, dynamic>>[].obs;
   var customers = <Map<String, dynamic>>[].obs;
+  var products = <Map<String, dynamic>>[].obs;
+
+  var isLoadingProducts = false.obs;
 
   @override
   void onInit() {
     super.onInit();
     fetchOrders();
     fetchCustomers();
+    fetchProducts();
   }
 
   Future<void> fetchOrders() async {
@@ -69,6 +73,34 @@ class AdminDashboardController extends GetxController {
       print('Error fetching customers: $e');
     } finally {
       isLoadingCustomers.value = false;
+    }
+  }
+
+  Future<void> fetchProducts() async {
+    isLoadingProducts.value = true;
+    try {
+      final response = await supabase
+          .from('products')
+          .select('*')
+          .order('created_at', ascending: false);
+          
+      products.assignAll(List<Map<String, dynamic>>.from(response));
+    } catch (e) {
+      print('Error fetching products: $e');
+      Get.snackbar('Error', 'Gagal memuat data produk: $e', backgroundColor: Colors.red, colorText: Colors.white);
+    } finally {
+      isLoadingProducts.value = false;
+    }
+  }
+
+  Future<void> deleteProduct(String id) async {
+    try {
+      await supabase.from('products').delete().eq('id', id);
+      products.removeWhere((p) => p['id'] == id);
+      Get.snackbar('Berhasil', 'Produk berhasil dihapus', backgroundColor: Colors.green, colorText: Colors.white);
+    } catch (e) {
+      print('Error deleting product: $e');
+      Get.snackbar('Error', 'Gagal menghapus produk', backgroundColor: Colors.red, colorText: Colors.white);
     }
   }
 

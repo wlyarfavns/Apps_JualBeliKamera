@@ -8,7 +8,7 @@ class AdminDashboardView extends GetView<AdminDashboardController> {
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
-      length: 2,
+      length: 3,
       child: Scaffold(
         backgroundColor: const Color(0xFF121212),
         appBar: AppBar(
@@ -29,6 +29,7 @@ class AdminDashboardView extends GetView<AdminDashboardController> {
             tabs: [
               Tab(icon: Icon(Icons.shopping_cart), text: 'Pesanan'),
               Tab(icon: Icon(Icons.people), text: 'Pelanggan'),
+              Tab(icon: Icon(Icons.inventory), text: 'Produk'),
             ],
           ),
         ),
@@ -36,6 +37,7 @@ class AdminDashboardView extends GetView<AdminDashboardController> {
           children: [
             _buildOrdersTab(),
             _buildCustomersTab(),
+            _buildProductsTab(),
           ],
         ),
       ),
@@ -49,7 +51,17 @@ class AdminDashboardView extends GetView<AdminDashboardController> {
       }
       
       if (controller.orders.isEmpty) {
-        return const Center(child: Text('Belum ada pesanan.', style: TextStyle(color: Colors.white54)));
+        return RefreshIndicator(
+          color: const Color(0xFFFF3B30),
+          onRefresh: controller.fetchOrders,
+          child: ListView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            children: const [
+              SizedBox(height: 300),
+              Center(child: Text('Belum ada pesanan.', style: TextStyle(color: Colors.white54))),
+            ],
+          ),
+        );
       }
 
       return RefreshIndicator(
@@ -215,7 +227,17 @@ class AdminDashboardView extends GetView<AdminDashboardController> {
       }
       
       if (controller.customers.isEmpty) {
-        return const Center(child: Text('Belum ada pelanggan.', style: TextStyle(color: Colors.white54)));
+        return RefreshIndicator(
+          color: const Color(0xFFFF3B30),
+          onRefresh: controller.fetchCustomers,
+          child: ListView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            children: const [
+              SizedBox(height: 300),
+              Center(child: Text('Belum ada pelanggan.', style: TextStyle(color: Colors.white54))),
+            ],
+          ),
+        );
       }
 
       return RefreshIndicator(
@@ -249,5 +271,114 @@ class AdminDashboardView extends GetView<AdminDashboardController> {
         ),
       );
     });
+  }
+
+  Widget _buildProductsTab() {
+    return Scaffold(
+      backgroundColor: Colors.transparent,
+      floatingActionButton: FloatingActionButton(
+        backgroundColor: const Color(0xFFFF3B30),
+        onPressed: () {
+          Get.toNamed('/admin_product_form');
+        },
+        child: const Icon(Icons.add, color: Colors.white),
+      ),
+      body: Obx(() {
+        if (controller.isLoadingProducts.value) {
+          return const Center(child: CircularProgressIndicator(color: Color(0xFFFF3B30)));
+        }
+        
+        if (controller.products.isEmpty) {
+          return RefreshIndicator(
+            color: const Color(0xFFFF3B30),
+            onRefresh: controller.fetchProducts,
+            child: ListView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              children: const [
+                SizedBox(height: 300),
+                Center(child: Text('Belum ada produk.', style: TextStyle(color: Colors.white54))),
+              ],
+            ),
+          );
+        }
+
+        return RefreshIndicator(
+          color: const Color(0xFFFF3B30),
+          onRefresh: controller.fetchProducts,
+          child: ListView.builder(
+            padding: const EdgeInsets.all(16).copyWith(bottom: 80),
+            itemCount: controller.products.length,
+            itemBuilder: (context, index) {
+              final product = controller.products[index];
+              return Card(
+                color: const Color(0xFF1E1E1E),
+                margin: const EdgeInsets.only(bottom: 12),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                child: ListTile(
+                  contentPadding: const EdgeInsets.all(12),
+                  leading: ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: Image.network(
+                      product['image_url'] ?? 'https://via.placeholder.com/150',
+                      width: 60,
+                      height: 60,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) => Container(
+                        width: 60,
+                        height: 60,
+                        color: Colors.grey[800],
+                        child: const Icon(Icons.image_not_supported, color: Colors.white54),
+                      ),
+                    ),
+                  ),
+                  title: Text(product['name'] ?? 'Unknown', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                  subtitle: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const SizedBox(height: 4),
+                      Text(product['category'] ?? 'Uncategorized', style: const TextStyle(color: Colors.white54, fontSize: 12)),
+                      const SizedBox(height: 4),
+                      Text('Rp ${product['price']}', style: const TextStyle(color: Color(0xFFFF3B30), fontWeight: FontWeight.bold)),
+                    ],
+                  ),
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.edit, color: Colors.blue),
+                        onPressed: () {
+                          Get.toNamed('/admin_product_form', arguments: product);
+                        },
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.delete, color: Colors.red),
+                        onPressed: () {
+                          Get.defaultDialog(
+                            title: 'Hapus Produk',
+                            titleStyle: const TextStyle(color: Colors.white),
+                            middleText: 'Yakin ingin menghapus ${product['name']}?',
+                            middleTextStyle: const TextStyle(color: Colors.white70),
+                            backgroundColor: const Color(0xFF1E1E1E),
+                            textConfirm: 'Hapus',
+                            textCancel: 'Batal',
+                            confirmTextColor: Colors.white,
+                            cancelTextColor: Colors.white,
+                            buttonColor: Colors.red,
+                            onConfirm: () {
+                              controller.deleteProduct(product['id']);
+                              Get.back();
+                            },
+                          );
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
+        );
+      }),
+    );
   }
 }
